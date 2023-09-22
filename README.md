@@ -1,2 +1,2 @@
-# research-yaya
-document my research moments.
+# 项目说明
+用于记录论文资料及代码资料
