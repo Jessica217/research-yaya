@@ -6,7 +6,7 @@ class BaseFood:
         self.primary_materials = primary_materials
         self.zuoliao = zuoliao
         self.cook_function = cook_function
-        self.wash_vegetables()
+        self.wash_vegetables()# 洗菜 切菜 装盘是默认的操作，所以写在基类中
         self.cut_vegetables()
         self.finish_dish()
 
@@ -23,7 +23,7 @@ class BaseFood:
     def finish_dish(self):
         print("装盘:{}".format(self.primary_materials))
 
-#类的继承 class 新类(基类) 可以用基类中的方法，也可以自己新加
+# 类的继承 class 新类(基类) 可以用基类中的方法，也可以自己新加
 class potato_with_beef(BaseFood):
     def dun_beef(self):
         print("要炖:{}".format(self.primary_materials))
@@ -38,8 +38,3 @@ if __name__ == "__main__":
     new_dish.dun_beef()
 
 
-    '''basefood.get()
-    basefood.wash_vegetables()
-    basefood.cut_vegetables()
-    basefood.cook_vegetables()
-    basefood.finish_dish()'''
