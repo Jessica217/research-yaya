@@ -12,6 +12,7 @@ class Clock(object):
         # self.second + 1  错误的，这样根本没给原先属性+1 应该是x = x + 1 或者x += 1 这种形式
         self.second += 1
         # second = self.second 这句话对吗 有啥用？
+        # 这句话没有意义（在这个例子） 如果有意义的话 是用一个second作为临时变量复制一份self.second的值
 
         # 正确的进位逻辑
         if self.second == 60:
@@ -37,4 +38,4 @@ if __name__ == "__main__": # 此方法用于确定当前脚本是被直接运行
         time.sleep(1)
         Clock.show()
 
-# 示例如上，原先分数60，现在理解多了，能不能加上20分QWQ
+# 示例如上，原先分数80!
