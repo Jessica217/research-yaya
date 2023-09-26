@@ -40,7 +40,7 @@
 
 任务内容:
 
-1.定义一个数字时钟类
+1. 定义一个数字时钟类
 
 其中包括类内属性`hour: 时`, `minute: 分`, `second: 秒`
 
@@ -50,4 +50,27 @@
 
 `show:显示时间` 按时:分:秒的形式显示时间，例如`01:09:23`(可能需要了解一下格式输出)
 
-2.实例化这个类，创建一个Clock对象并初始化为(23,59,58),使用条件循环模拟和`time.sleep(1)`函数模拟实际的时间流逝，执行`Clock.show()`与`Clock.run()`并观察输出
+2. 实例化这个类，创建一个Clock对象并初始化为(23,59,58),使用条件循环模拟和`time.sleep(1)`函数模拟实际的时间流逝，执行`Clock.show()`与`Clock.run()`并观察输出
+
+## 2023/9/26 day3
+
+#### 任务目标：面向对象编程基础2
+文件
+
+```bash
+./codes/day3-AdvanceClock.py
+```
+
+任务内容：
+
+1. 在原先的`Clock`类之上定义它的子类`AdvanceClock`
+
+额外新增类内属性`timezone：时区`, timezone为现实世界中的时区划定标准，其类型为`dict`，记录不同城市的时区信息
+
+默认初始化为`{"Beijing":"{timezone_num}", "NewYork":"{timezone_num}", "London":{timezone_num}}`其中timezone_num为真实时区
+
+额外新增类内方法`get_time` 输入时区的城市名，返回指定城市名和其对应时间
+
+2. 实例化这个类，创建一个Clock对象并初始化为(23,59,58),使用条件循环模拟和`time.sleep(1)`函数模拟实际的时间流逝
+
+循环执行`AdvanceClock.run()`与`AdvanceClock.get_time()`观察三个不同时区的城市时间输出
