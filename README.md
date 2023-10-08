@@ -81,7 +81,7 @@
 文件：
 
 ```bash
-./codes/day3-FileSearch.py
+./codes/day4-FileSearch.py
 ```
 
 任务内容：
@@ -91,4 +91,42 @@
 1. 打开指定的文本文件，支持搜索其中的相关内容进行替换
 2. 支持将文本文件按照换行切分输出成多个独立文件，名称为源文件名+_{num}，其中num为第几份
 
-示例化这个类，使用随意编写的`.txt`文本文件测试以上功能
+实例化这个类，使用随意编写的`.txt`文本文件测试以上功能
+
+## 2023/10/08 day 5
+
+#### 任务目标: 利用request库,re库等爬虫相关库编写一个简单的爬虫
+
+文件：
+
+```bash
+./codes/day5-Crawler.py
+```
+
+任务内容:
+
+声明一个Crawler类，类内方法必须有 `info_dict` 用于存储爬取的网站信息，其他类内属性与类内方法可自定义，必须能够爬取靶向网站的要求内容。
+
+由于爬虫的特殊性，逻辑多为定制化不可复用，这里给出一个爬虫靶向电影网站：https://ssr1.scrape.center/
+
+要求达到以下功能:
+
+1.爬取靶向网站中的电影名称，评分，英文名，时长等内容，要求存储为dict格式(存储在`info_dict`中)
+
+```python
+# 解释以下key值:
+# movie_id:自增的id值，由0开始，每个被爬取的电影对应唯一一个id
+# movie_name:电影的中文名
+# movie_eng_name:电影的英文名
+# movie_time:电影的时长，类型为int
+# movie_score:电影的评分，类型为float
+# 其他相关可爬取的信息也请尽量添加，但不做要求
+{"movie_id":{'movie_name':"xxxx", "movie_eng_name":"xxxx", "movie_time":120, "movie_score":9.5},
+ "movie_id":{'movie_name':"xxxx", "movie_eng_name":"xxxx", "movie_time":120, "movie_score":9.5}}
+```
+
+2.支持将爬取完毕的`info_dict`中的内容存储为`result.txt`文件
+
+注意：原网站中涉及翻页跳转，需要考虑爬取过程中的自动跳转，比如第一页爬取完毕后检查页数进行跳转，直到所有条目爬取完毕.
+
+实例化这个类，对网站中的电影信息进行爬取，并存储为指定文件.
