@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 import requests
 
 class Crawler():
-    def __init__(self, info_dict: dict = {}, url:str = ''):
+    def __init__(self, info_dict: dict = {}, url : str = ''):
         self.url = url
         self.info_dict = info_dict
         self.movie_name_list = []
@@ -46,25 +46,32 @@ class Crawler():
             self.movie_score_list.append(result)
 
 
-        #
-        for i in range(len(self.movie_name_list)):
+        # 精髓
+
+        for i in range(len(self.movie_name_list)): # 每个列表的长度一样
             movie_name = self.movie_name_list[i]
             movie_eng_name = self.movie_eng_name_list[i]
             movie_time = self.movie_time_list[i]
             movie_score = self.movie_score_list[i]
-            self.info_dict[i] = {'movie_name':movie_name, 'movie_eng_name':movie_eng_name, 'movie_time':movie_time, 'movie_score':movie_score}
+            self.info_dict[i] = {'movie_name': movie_name, 'movie_eng_name': movie_eng_name, 'movie_time': movie_time,'movie_score': movie_score}
+
+        print(str(self.info_dict))
+
+        with open('result.txt', 'a', encoding='UTF-8') as f:
+            f.write(str(self.info_dict))
 
 
 if __name__ == '__main__':
     # 搜索所有相关的网页
+
     for i in range(1, 11):
         url = 'https://ssr1.scrape.center/page/{}'.format(i)
         crawler = Crawler(url = url)
         crawler.obtain_url_info()
-    #print(crawler.info_dict)
-        with open('result.txt', 'w', encoding='UTF-8') as f:
-            movie_info = str(crawler.info_dict)
-            f.write(movie_info)
+        #print(crawler.obtain_url_info())
+
+
+
 
 
 
