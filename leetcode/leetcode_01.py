@@ -16,7 +16,7 @@ class Solution:
 
         # 使用哈希表进行遍历
         hashtable = dict() # 字典中的元素不能重复
-        for i, num in enumerate(self.nums): # enumerate的意义见 test.py,i = 0, 1, 2 num = 3, 2, 4
+        for i, num in enumerate(self.nums): # enumerate的意义见 image_crop.py,i = 0, 1, 2 num = 3, 2, 4
             if self.target - num in hashtable:# target-num是字典的键
                 #print(hashtable)
                 print([hashtable[self.target - num], i])
