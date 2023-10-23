@@ -4,7 +4,6 @@ from torch.utils.data import DataLoader
 from torch.utils.data import Dataset
 from torchvision import transforms
 from torchvision import datasets
-from torchvision.datasets import ImageFolder
 from PIL import Image
 import torch.nn as nn
 import torch
@@ -20,7 +19,6 @@ def read_csv():
 
     with open('datasets/label.txt', 'w') as f:
         for index in range(len(files)):
-            print(files)
             f.writelines(files[index] +' ' + new_data[index] + '\n')
 
 
@@ -28,46 +26,77 @@ def read_csv():
 data_path_test = r'./datasets/test'
 data_path_train = r'./datasets/train'
 
-label_path = r'./datasets/label.txt'
 label_path_train = r'./datasets/train/label_train.txt'
 label_path_test = r'./datasets/test/label_test.txt'
 
 
-class MyDataset(Dataset):
-    def __init__(self, data_path, label_path, imgs =[]):
+# 自定义Dataset的子类用于train
+class My_train_Dataset(Dataset):
+    def __init__(self, data_path_train, label_path_train, imgs = []):
         self.imgs = imgs
-        self.data_path = data_path
-        datainfo = open(label_path, 'r')
+        self.data_path_train = data_path_train
+        datainfo = open(label_path_train, 'r')
         for info in datainfo:
             info = info.strip('\n')
             words = info.split()
             self.imgs.append((words[0], words[1]))
+            print(type(words[1]))
+            #print(imgs)
 
     def __len__(self):
         return len(self.imgs)
 
     def __getitem__(self, index):
         img, label = self.imgs[index]
-        img = Image.open(self.data_path+'/'+img)
+        img = Image.open(self.data_path_train+'/'+img)
+        if img.mode != 'L':
+            img = img.convert('L')
+        #print(img.mode)
+        img = transforms.ToTensor()(img)
+        return img, label
+
+
+# 自定义Dataset的子类用于test
+class My_test_Dataset(Dataset):
+    def __init__(self, data_path_test, label_path_test, imgs = []):
+        self.imgs = imgs
+        self.data_path_test = data_path_test
+        datainfo = open(label_path_test, 'r')
+        for info in datainfo:
+            info = info.strip('\n')
+            words = info.split()
+            self.imgs.append((words[0], words[1]))
+            #print(imgs)
+
+    def __len__(self):
+        return len(self.imgs)
+
+    def __getitem__(self, index):
+        img, label = self.imgs[index]
+        img = Image.open(self.data_path_test+'/'+img)
+        if img.mode != 'L':
+            img = img.convert('L')
+        #print(img.mode)
         img = transforms.ToTensor()(img)
         return img, label
 
 
 # 训练集
-dataset_train = MyDataset(data_path_train, label_path_train)
+dataset_train = My_train_Dataset(data_path_train, label_path_train)
 dataloader_train = DataLoader(dataset_train, shuffle=True, batch_size=2, num_workers=0) # shuffle=True表示在每个epoch之后打乱数据
 # 测试集
-dataset_test = MyDataset(data_path_test, label_path_test)
+dataset_test = My_test_Dataset(data_path_test, label_path_test)
 dataloader_test = DataLoader(dataset_test, shuffle=True, batch_size=2, num_workers=0)
 
 
-# 查看自己的dataloader
-'''for img, label in dataloader:
+'''# 查看自己的dataloader_train
+for img, label in dataloader_train:
+    print(img, label)
+print("========================================================================================================")
+for img, label in dataloader_test:
     print(img, label)'''
 
-
-
-# 超参数
+# 超参数设置
 EPOCH = 100       # 前向后向传播迭代次数
 LR = 0.001      # 学习率 learning rate
 
@@ -129,16 +158,16 @@ class kidney_classification_CNN(nn.Module):
         return out
 
 
-
-
 kidney_cnn = kidney_classification_CNN()
 optimizer = torch.optim.Adam(kidney_cnn.parameters(), lr=LR)
 loss = nn.CrossEntropyLoss() # 定义损失函数
 
+# 训练
 for epoch in range(EPOCH):
 
     for step, (batch_x, batch_y) in enumerate(dataloader_train):
         pred_y = kidney_cnn(batch_x)
+        batch_y = torch.tensor(batch_y)
         loss = loss(pred_y, batch_y)
         optimizer.zero_grad()  # 清空上一层梯度
         loss.backward()  # 反向传播
