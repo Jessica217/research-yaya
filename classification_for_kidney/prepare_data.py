@@ -26,14 +26,18 @@ def prepare_data(file_path):
 
 
 
-class classification_CNN(nn.Module):
-    def __init__(self):
-        super(classification_CNN, self).__init__()
-        self.conv1 = nn.Conv2d(1, 1, 3, 1, 1)
-        self.maxpool1 = nn.MaxPool2d(2)
-        self.relu1 = nn.ReLU
+# 读取csv文件,并将新结果写入txt文件
+def read_csv():
+    data = pd.read_csv('DMSA.csv')
+    labels_left = data['左侧output']
+    labels_right = data['右侧output']
+    new_data = labels_left.astype('str')+''+labels_right.astype('str')
 
-        self.conv = nn.Conv2d(1, 1, 3, 1, 1)
+    picture_path = 'datasets/DMSA_new'
+    files = os.listdir(picture_path)
+    with open('datasets/label.txt', 'w') as f:
+        for index in range(len(files)):
+            f.writelines(files[index] +' ' + new_data[index] + '\n')
 
 
 
