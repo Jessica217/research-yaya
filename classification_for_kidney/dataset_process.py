@@ -3,6 +3,7 @@ import os
 from torch.utils.data import DataLoader
 from torch.utils.data import Dataset
 from torchvision import transforms
+import torch.nn.functional as F
 from torchvision import datasets
 from PIL import Image
 import torch.nn as nn
@@ -106,6 +107,100 @@ class CustomAlexNet(nn.Module):
         x = self.classifier(x)
         return x
 
+class YeNetB(nn.Module):
+
+    def __init__(self, num_classes=4):
+        super(YeNetB,self).__init__()
+        self.conv1 = nn.Conv2d(1,48,3)
+        self.conv6 = nn.Conv2d(48,96,3)
+        self.conv2 = nn.Conv2d(96,128,3)
+        self.pool1 = nn.MaxPool2d(2,2)
+        self.conv3 = nn.Conv2d(128,256,3)
+        self.conv4 = nn.Conv2d(256,384,3)
+        self.bn1 = nn.BatchNorm2d(384)
+        self.conv5 = nn.Conv2d(384,256,3)
+        self.bn2 = nn.BatchNorm2d(256)
+        self.pool2 = nn.MaxPool2d(2,2)
+        self.fc1 = nn.Linear(256*3*3,256)
+        self.fc2 = nn.Linear(256,128)
+        self.fc3 = nn.Linear(128,num_classes)
+        self.dropout = nn.Dropout2d(0.5)
+
+    def forward(self,x):
+        x = self.conv1(x)#30*30*48
+        x = F.relu(x)
+        x = self.conv6(x)#28*28*96
+        x = F.relu(x)
+        x = self.conv2(x)#26*26*128
+        x = F.relu(x)
+        x = self.pool1(x)#13*13*128
+
+        x = self.conv3(x)#11*11*256
+        x = F.relu(x)
+        x = self.conv4(x)#9*9*384
+        x = self.bn1(x)
+        x = F.relu(x)
+        x = self.conv5(x)#7*7*256
+        x = self.bn2(x)
+        x = F.relu(x)
+        x = self.pool2(x)#3*3*256
+
+        x = x.view(-1, self.num_flat_features(x))
+        x = F.relu(self.fc1(x))
+        x = self.dropout(x)
+        x = F.relu(self.fc2(x))
+        x = self.dropout(x)
+        x = self.fc3(x)
+        return x
+
+    def num_flat_features(self, x):
+        size = x.size()[1:]  # 除去批处理维度的其他所有维度
+        num_features = 1
+        for s in size:
+            num_features *= s
+        return num_features
+
+class YeNet(nn.Module):
+
+    def __init__(self, num_classes=4):
+        super(YeNet,self).__init__()
+        self.conv1 = nn.Conv2d(1,16,5)
+        self.conv2 = nn.Conv2d(16,32,3)
+        self.pool1 = nn.MaxPool2d(2,2)
+        self.conv3 = nn.Conv2d(32,64,5)
+        self.conv4 = nn.Conv2d(64,96,3)
+        self.pool2 = nn.MaxPool2d(2,2)
+        self.fc1 = nn.Linear(470400,256)
+        self.fc2 = nn.Linear(256,128)
+        self.fc3 = nn.Linear(128,num_classes)
+
+    def forward(self,x):
+        x = self.conv1(x)#28*28*48
+        x = F.relu(x)
+        x = self.conv2(x)#26*26*96
+        x = F.relu(x)
+        x = self.pool1(x)#13*13*96
+
+        x = self.conv3(x)#9*9*128
+        x = F.relu(x)
+        x = self.conv4(x)#7*7*256
+        x = F.relu(x)
+        x = self.pool2(x)#3*3*256
+
+        x = x.view(-1, self.num_flat_features(x))
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        x = self.fc3(x)
+        return x
+
+    def num_flat_features(self, x):
+        size = x.size()[1:]  # 除去批处理维度的其他所有维度
+        num_features = 1
+        for s in size:
+            num_features *= s
+        return num_features
+
+
 # 创建自己的dataset数据集
 data_path_test = r'./datasets/test'
 data_path_train = r'./datasets/train'
@@ -116,7 +211,7 @@ label_path_test = r'./datasets/test/label_test.txt'
 
 # 自定义Dataset的子类用于train
 class MyDataset(Dataset):
-    def __init__(self, data_path, label_path, imgs = []):
+    def __init__(self, data_path, label_path, transforms=None, imgs = []):
         self.imgs = imgs
         self.data_path = data_path
         datainfo = open(label_path, 'r')
@@ -135,6 +230,7 @@ class MyDataset(Dataset):
         if img.mode != 'L':
             img = img.convert('L')
         img = transforms.ToTensor()(img)
+        img = transforms.RandomHorizontalFlip(p=0.5)(img)
         return img, label
 
 
@@ -156,7 +252,7 @@ for img, label in dataloader_test:
 
 # 超参数设置
 EPOCH = 100       # 前向后向传播迭代次数
-LR = 1e-3      # 学习率 learning rate
+LR = 0.005      # 学习率 learning rate
 
 # 初始化自定义的AlexNet模型
 custom_alexnet = CustomAlexNet(num_classes=4)

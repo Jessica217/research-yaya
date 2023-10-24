@@ -15,12 +15,12 @@ def prepare_data(file_path):
         # 将彩色图像转换为灰度图像
         gray_image = cv2.cvtColor(color_image, cv2.COLOR_BGR2GRAY)
         # 将像素值归一化到[0, 1]范围内
-        normalized_gray_image = gray_image.astype(float) / 255.0
+        #normalized_gray_image = gray_image.astype(float) / 255.0
         # 保存处理的图片
         new_data_folder = 'DMSA_new'
         if not os.path.exists(new_data_folder):
             os.makedirs(new_data_folder) # 判断路径中是否有此文件夹 若没有 需要创建
-        cv2.imwrite(os.path.join(new_data_folder, filename), normalized_gray_image*255) # 保存resize和归一化后的图片
+        cv2.imwrite(os.path.join(new_data_folder, filename),gray_image) # 保存resize和归一化后的图片
 
 
 prepare_data('./DMSA')
