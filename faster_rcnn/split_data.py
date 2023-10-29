@@ -1,39 +1,45 @@
-import random
 import os
+import random
+
 
 def main():
     random.seed(0)  # 设置随机种子，保证随机结果可复现
 
-    files_path = './VOCdevkit/VOC2012/Annotations'
+    files_path = "./VOCdevkit/VOC2012/Annotations"
     assert os.path.exists(files_path), "path: '{}' does not exist.".format(files_path)
-
-    total_files = sorted([file.split(".")[0] for file in os.listdir(files_path)])
-    total_num = len(total_files) # 获取数据集总长度
-
     train_rate = 0.9
-    val_rate = 0.05
     test_rate = 0.05
+    val_rate = 0.05
 
-    train_num = int(total_num * train_rate)
-    val_num = int(total_num * val_rate)
-    test_num = int(total_num * test_rate)
+    files_name = sorted([file.split(".")[0] for file in os.listdir(files_path)])
+    files_num = len(files_name)
+    train_index = random.sample(range(0, files_num), k=int(files_num*train_rate))
+    test_index = random.sample(range(0, files_num), k=int(files_num*test_rate))
+    val_index = random.sample(range(0, files_num), k=int(files_num*val_rate))
 
-    random.shuffle(total_files)  # 随机打乱数据集
-
-    train_files = total_files[:train_num]
-    val_files = total_files[train_num:train_num + val_num]
-    test_files = total_files[train_num + val_num:]
+    train_files = []
+    test_files = []
+    val_files = []
+    for index, file_name in enumerate(files_name):
+        if index in val_index:
+            val_files.append(file_name)
+        elif index in train_index:
+            train_files.append(file_name)
+        elif index in test_index:
+            test_files.append(file_name)
 
     try:
-        with open("VOCdevkit/VOC2012/ImageSets/Main/train.txt", "w") as train_f:
-            train_f.write("\n".join(train_files))
-        with open("VOCdevkit/VOC2012/ImageSets/Main/val.txt", "w") as eval_f:
-            eval_f.write("\n".join(val_files))
-        with open("VOCdevkit/VOC2012/ImageSets/Main/test.txt", "w") as test_f:
-            test_f.write("\n".join(test_files))
+        train_f = open("train.txt", "x")
+        eval_f = open("val.txt", "x")
+        test_f = open("test.txt","x")
+        train_f.write("\n".join(train_files))
+        eval_f.write("\n".join(val_files))
+        test_f.write("\n".join(test_files))
+
     except FileExistsError as e:
         print(e)
         exit(1)
 
-if __name__ == "__main__":
+
+if __name__ == '__main__':
     main()

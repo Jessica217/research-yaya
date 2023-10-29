@@ -11,7 +11,6 @@ for xml in os.listdir("./"):
         myroot = mytree.getroot()
         for object_ in myroot.findall('.//object'):
             name = object_.find('name')
-
             print('开始处理{}文件'.format(xml))
             name.text = mapping_dict[str(name.text)]
 
