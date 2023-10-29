@@ -4,11 +4,12 @@ from collections import defaultdict
 import numpy as np
 import copy
 import torch
+import torch._six
 from pycocotools.cocoeval import COCOeval
 from pycocotools.coco import COCO
 import pycocotools.mask as mask_util
 
-from .distributed_utils import all_gather
+from train_utils.distributed_utils import all_gather
 
 
 class CocoEvaluator(object):
@@ -241,7 +242,7 @@ def loadRes(self, resFile):
 
     # print('Loading and preparing results...')
     # tic = time.time()
-    if isinstance(resFile, str):
+    if isinstance(resFile, torch._six.string_classes):
         anns = json.load(open(resFile))
     elif type(resFile) == np.ndarray:
         anns = self.loadNumpyAnnotations(resFile)
