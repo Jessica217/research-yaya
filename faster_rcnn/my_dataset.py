@@ -5,10 +5,21 @@ import torch
 import json
 from PIL import Image
 from lxml import etree
+'''
+原来：
+   左  右  
+好  0  2
+坏  1  3
+
+
+现在：
+不考虑左右肾脏
+好 0 坏 1 
+'''
 
 
 class VOCDataSet(Dataset):
-    """读取解析VOC2012数据集"""
+    """读取解析PASCAL VOC2007/2012数据集"""
 
     def __init__(self, voc_root, year="2012", transforms=None, txt_name: str = "train.txt"):
         assert year in ["2007", "2012"], "year must be in ['2007', '2012']"
@@ -24,8 +35,9 @@ class VOCDataSet(Dataset):
         txt_path = os.path.join(self.root, "ImageSets", "Main", txt_name)
         assert os.path.exists(txt_path), "not found {} file.".format(txt_name)
 
+        print(txt_path)
         with open(txt_path) as read:
-            xml_list = [os.path.join(self.annotations_root, line.strip() + ".xml") # 得到每一个图像的xml文件
+            xml_list = [os.path.join(self.annotations_root, line.strip() + ".xml")
                         for line in read.readlines() if len(line.strip()) > 0]
 
         self.xml_list = []
@@ -73,11 +85,10 @@ class VOCDataSet(Dataset):
 
         boxes = []
         labels = []
-        iscrowd = [] #是否能检测
+        iscrowd = []
         assert "object" in data, "{} lack of object information.".format(xml_path)
-
         for obj in data["object"]:
-            xmin = float(obj["bndbox"]["xmin"]) # 将str转化为float
+            xmin = float(obj["bndbox"]["xmin"])
             xmax = float(obj["bndbox"]["xmax"])
             ymin = float(obj["bndbox"]["ymin"])
             ymax = float(obj["bndbox"]["ymax"])
@@ -200,44 +211,4 @@ class VOCDataSet(Dataset):
     def collate_fn(batch):
         return tuple(zip(*batch))
 
-# import transforms
-# from draw_box_utils import draw_objs
-# from PIL import Image
-# import json
-# import matplotlib.pyplot as plt
-# import torchvision.transforms as ts
-# import random
-#
-# # read class_indict
-# category_index = {}
-# try:
-#     json_file = open('./pascal_voc_classes.json', 'r')
-#     class_dict = json.load(json_file)
-#     category_index = {str(v): str(k) for k, v in class_dict.items()}
-# except Exception as e:
-#     print(e)
-#     exit(-1)
-#
-# data_transform = {
-#     "train": transforms.Compose([transforms.ToTensor(),
-#                                  transforms.RandomHorizontalFlip(0.5)]),
-#     "val": transforms.Compose([transforms.ToTensor()])
-# }
-#
-# # load train data set
-# train_data_set = VOCDataSet(os.getcwd(), "2012", data_transform["train"], "train.txt")
-# print(len(train_data_set))
-# for index in random.sample(range(0, len(train_data_set)), k=5):
-#     img, target = train_data_set[index]
-#     img = ts.ToPILImage()(img)
-#     plot_img = draw_objs(img,
-#                          target["boxes"].numpy(),
-#                          target["labels"].numpy(),
-#                          np.ones(target["labels"].shape[0]),
-#                          category_index=category_index,
-#                          box_thresh=0.5,
-#                          line_thickness=3,
-#                          font='arial.ttf',
-#                          font_size=20)
-#     plt.imshow(plot_img)
-#     plt.show()
+

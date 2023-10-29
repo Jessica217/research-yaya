@@ -2,14 +2,24 @@ import os
 import datetime
 
 import torch
+import torchvision.transforms
 
-import transforms
+import transforms as tfs
 from network_files import FasterRCNN, FastRCNNPredictor
 from backbone import resnet50_fpn_backbone
 from my_dataset import VOCDataSet
 from train_utils import GroupedBatchSampler, create_aspect_ratio_groups
 from train_utils import train_eval_utils as utils
 
+
+def GetTransform(train):
+    transforms = []
+    # 转换图像到张量
+    transforms.append(tfs.ToTensor())
+    if train:
+        # 训练过程中随即反转图像，进行数据增强
+        transforms.append(tfs.RandomHorizontalFlip(0.3))
+    return tfs.Compose(transforms)
 
 def create_model(num_classes, load_pretrain_weights=True):
     # 注意，这里的backbone默认使用的是FrozenBatchNorm2d，即不会去更新bn参数
@@ -48,9 +58,9 @@ def main(args):
     results_file = "results{}.txt".format(datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
 
     data_transform = {
-        "train": transforms.Compose([transforms.ToTensor(),
-                                     transforms.RandomHorizontalFlip(0.5)]),
-        "val": transforms.Compose([transforms.ToTensor()])
+        "train": torchvision.transforms.Compose([torchvision.transforms.ToTensor(),
+                                     torchvision.transforms.RandomHorizontalFlip(0.5)]),
+        "val": torchvision.transforms.Compose([torchvision.transforms.ToTensor()])
     }
 
     VOC_root = args.data_path
@@ -60,7 +70,7 @@ def main(args):
 
     # load train data set
     # VOCdevkit -> VOC2012 -> ImageSets -> Main -> train.txt
-    train_dataset = VOCDataSet(VOC_root, "2012", data_transform["train"], "train.txt")
+    train_dataset = VOCDataSet(VOC_root, "2012", GetTransform(train=True),'train.txt')
     train_sampler = None
 
     # 是否按图片相似高宽比采样图片组成batch
@@ -93,7 +103,7 @@ def main(args):
 
     # load validation data set
     # VOCdevkit -> VOC2012 -> ImageSets -> Main -> val.txt
-    val_dataset = VOCDataSet(VOC_root, "2012", data_transform["val"], "val.txt")
+    val_dataset = VOCDataSet(VOC_root, "2012", GetTransform(train=False), "val.txt", )
     val_data_set_loader = torch.utils.data.DataLoader(val_dataset,
                                                       batch_size=1,
                                                       shuffle=False,
@@ -117,8 +127,9 @@ def main(args):
     scaler = torch.cuda.amp.GradScaler() if args.amp else None
 
     # learning rate scheduler
-    # 动态调整学习率 ，其中学习率初始化为0.01，step_size是每多少个epoch更新一次学习率，gamma为学习率衰减的乘法因子
-    lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.65)
+    lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer,
+                                                   step_size=10,
+                                                   gamma=0.65)
 
     # 如果指定了上次训练保存的权重文件地址，则接着上次结果接着训练
     if args.resume != "":
@@ -191,9 +202,9 @@ if __name__ == "__main__":
     # 训练数据集的根目录(VOCdevkit)
     parser.add_argument('--data-path', default='./', help='dataset')
     # 检测目标类别数(不包含背景)
-    parser.add_argument('--num-classes', default=4, type=int, help='num_classes') # 修改检测目标类别数
+    parser.add_argument('--num-classes', default=2, type=int, help='num_classes')
     # 文件保存地址
-    parser.add_argument('--output-dir', default='./save_new_weights', help='path where to save')
+    parser.add_argument('--output-dir', default='./save_weights', help='path where to save')
     # 若需要接着上次训练，则指定上次训练保存权重文件地址
     parser.add_argument('--resume', default='', type=str, help='resume from checkpoint')
     # 指定接着从哪个epoch数开始训练
@@ -201,7 +212,7 @@ if __name__ == "__main__":
     # 训练的总epoch数
     parser.add_argument('--epochs', default=100, type=int, metavar='N',
                         help='number of total epochs to run')
-    # 学习率，源码中初始学习率为0.01
+    # 学习率
     parser.add_argument('--lr', default=0.01, type=float,
                         help='initial learning rate, 0.02 is the default value for training '
                              'on 8 gpus and 2 images_per_gpu')
@@ -213,7 +224,7 @@ if __name__ == "__main__":
                         metavar='W', help='weight decay (default: 1e-4)',
                         dest='weight_decay')
     # 训练的batch size
-    parser.add_argument('--batch_size', default=8, type=int, metavar='N',
+    parser.add_argument('--batch_size', default=4, type=int, metavar='N',
                         help='batch size when training.')
     parser.add_argument('--aspect-ratio-group-factor', default=3, type=int)
     # 是否使用混合精度训练(需要GPU支持混合精度)
