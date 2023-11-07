@@ -70,7 +70,7 @@ class kidney_classification_CNN(nn.Module):
         #x = self.fc2(x)
         return x
 
-
+# 重写AlexNet网络，以适应输入图像
 class CustomAlexNet(nn.Module):
     def __init__(self, num_classes=4):
         super(CustomAlexNet, self).__init__()
@@ -107,6 +107,7 @@ class CustomAlexNet(nn.Module):
         x = self.classifier(x)
         return x
 
+# 加深网络层数
 class YeNetB(nn.Module):
 
     def __init__(self, num_classes=4):
@@ -202,20 +203,21 @@ class YeNet(nn.Module):
 
 
 # 创建自己的dataset数据集
-data_path_test = r'./datasets/test'
-data_path_train = r'./datasets/train'
+data_path_test = r'./datasets_for_CNN/test'
+data_path_train = r'./datasets_for_CNN/train'
 
-label_path_train = r'./datasets/train/label_train.txt'
-label_path_test = r'./datasets/test/label_test.txt'
+label_path_train = r'./datasets_for_CNN/train/label_train.txt'
+label_path_test = r'./datasets_for_CNN/test/label_test.txt'
 
 
 # 自定义Dataset的子类用于train
 class MyDataset(Dataset):
-    def __init__(self, data_path, label_path, transforms=None, imgs = []):
+    def __init__(self, data_path, label_path, imgs = []):
         self.imgs = imgs
         self.data_path = data_path
+        self.label_path = label_path
         datainfo = open(label_path, 'r')
-        mapping_dict = {"00": 0, "01": 1, "10": 2, "11": 3} # 表示四个类别
+        mapping_dict = {"0": 0, "1": 1} # 表示2个类别
         for info in datainfo:
             info = info.strip('\n')
             words = info.split()
@@ -230,13 +232,13 @@ class MyDataset(Dataset):
         if img.mode != 'L':
             img = img.convert('L')
         img = transforms.ToTensor()(img)
-        img = transforms.RandomHorizontalFlip(p=0.5)(img)
+        img = transforms.RandomHorizontalFlip(p=0.5)(img) # 随机翻转图像
         return img, label
 
 
 # 训练集
 dataset_train = MyDataset(data_path_train, label_path_train)
-dataloader_train = DataLoader(dataset_train, shuffle=True, batch_size=2, num_workers=0) # shuffle=True表示在每个epoch之后打乱数据
+dataloader_train = DataLoader(dataset_train, shuffle=True, batch_size=8, num_workers=0) # shuffle=True表示在每个epoch之后打乱数据
 
 # 测试集
 #dataset_test = My_Dataset(data_path_test, label_path_test)
@@ -255,14 +257,10 @@ EPOCH = 100       # 前向后向传播迭代次数
 LR = 0.005      # 学习率 learning rate
 
 # 初始化自定义的AlexNet模型
-custom_alexnet = CustomAlexNet(num_classes=4)
+custom_alexnet = CustomAlexNet(num_classes=2)
 # 定义损失函数和优化器
 criterion = nn.CrossEntropyLoss()
 optimizer = torch.optim.SGD(custom_alexnet.parameters(), lr=LR, momentum=0.9)
-
-
-'''optimizer = torch.optim.SGD(alexnet.parameters(), lr=LR, momentum=0.9)# 设置优化器
-loss = nn.CrossEntropyLoss() # 定义损失函数'''
 
 
 # 使用CUDA加速以GPU进行训练，否则使用CPU
@@ -312,7 +310,6 @@ for epoch in range(EPOCH):
             #           values=tensor([0.7000, 0.9000]),
             #           indices=tensor([2, 2]))
             # 后面的[1]代表获取indices'''
-    #print('Epoch: ', epoch, '| train loss: %.4f' % epoch_loss.data.cpu().numpy())
 
     print(f'Epoch [{epoch + 1}/{EPOCH}], Loss: {epoch_loss:.4f}, Accuracy: {accuracy * 100:.2f}%')
 
